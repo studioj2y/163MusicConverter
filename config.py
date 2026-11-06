@@ -5,10 +5,23 @@ Saves and loads user preferences from a local JSON file.
 """
 
 import os
+import sys
 import json
 from typing import Dict, Any
 
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
+def get_app_dir() -> str:
+    """Returns application root directory (where exe resides if frozen, or script dir)."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_bundle_dir() -> str:
+    """Returns bundle resource directory (sys._MEIPASS for PyInstaller --onefile)."""
+    if getattr(sys, 'frozen', False):
+        return getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+CONFIG_FILE = os.path.join(get_app_dir(), "settings.json")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "target_format": "source",            # 'source', 'mp3', 'aac'

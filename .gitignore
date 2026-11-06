@@ -21,6 +21,11 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+
 # IDE and Editor files
 .vscode/
 .idea/

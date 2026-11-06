@@ -5,6 +5,7 @@ Automates optimal audio encoding for MP3 and AAC with maximum device compatibili
 """
 
 import os
+import sys
 import re
 import shutil
 import subprocess
@@ -13,6 +14,14 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB, ID3NoHeaderError
 from mutagen.mp4 import MP4, MP4Cover
 
+def _get_base_dirs():
+    dirs = [os.path.dirname(os.path.abspath(__file__))]
+    if getattr(sys, 'frozen', False):
+        dirs.insert(0, os.path.dirname(sys.executable))
+        if hasattr(sys, '_MEIPASS'):
+            dirs.append(sys._MEIPASS)
+    return dirs
+
 # Common installation paths on Windows
 KNOWN_FFMPEG_PATHS = [
     r"C:\Tools\Portable\ffmpeg-2021-05-12-git-175f675f7b-essentials_build\bin\ffmpeg.exe",
@@ -20,9 +29,10 @@ KNOWN_FFMPEG_PATHS = [
     r"C:\Tools\Portable\shotcut-win64-25.12.31\Shotcut\ffmpeg.exe",
     r"C:\ffmpeg\bin\ffmpeg.exe",
     r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", "ffmpeg.exe"),
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "ffmpeg.exe"),
 ]
+for d in _get_base_dirs():
+    KNOWN_FFMPEG_PATHS.append(os.path.join(d, "tools", "ffmpeg.exe"))
+    KNOWN_FFMPEG_PATHS.append(os.path.join(d, "ffmpeg.exe"))
 
 _CACHED_FFMPEG_PATH: Optional[str] = None
 

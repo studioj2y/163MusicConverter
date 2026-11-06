@@ -1,0 +1,71 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build Windows Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Run test suite
+        run: |
+          python tests/test_suite.py
+
+      - name: Build Standalone Executable with PyInstaller
+        run: |
+          pyinstaller --noconsole --onefile `
+            --name "163MusicConverter" `
+            --icon "app_icon.ico" `
+            --add-data "app_icon.ico;." `
+            --add-data "app_icon.png;." `
+            --add-data "settings.json.example;." `
+            --collect-data customtkinter `
+            --collect-data tkinterdnd2 `
+            --clean `
+            app.py
+
+      - name: Package Release Archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package/163MusicConverter
+          Copy-Item dist/163MusicConverter.exe package/163MusicConverter/
+          Copy-Item README.md package/163MusicConverter/
+          Copy-Item LICENSE package/163MusicConverter/
+          Copy-Item settings.json.example package/163MusicConverter/
+          $TAG = if ($env:GITHUB_REF_NAME) { $env:GITHUB_REF_NAME } else { "v1.0.0" }
+          Compress-Archive -Path package/163MusicConverter -DestinationPath "163MusicConverter-$TAG-windows-x64.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: 163MusicConverter ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            163MusicConverter-*.zip
+            dist/163MusicConverter.exe

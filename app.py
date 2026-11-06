@@ -17,6 +17,21 @@ from config import load_config, save_config
 from task_manager import ConversionTaskManager, TaskStatus
 from ffmpeg_engine import find_ffmpeg, get_ffmpeg_version
 
+def get_resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and for PyInstaller --onefile"""
+    if getattr(sys, 'frozen', False):
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    res = os.path.join(base_path, relative_path)
+    if os.path.exists(res):
+        return res
+    if getattr(sys, 'frozen', False):
+        exe_res = os.path.join(os.path.dirname(sys.executable), relative_path)
+        if os.path.exists(exe_res):
+            return exe_res
+    return res
+
 # Ensure UTF-8 output if terminal attached
 if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
     try:
@@ -99,7 +114,7 @@ class MusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
         self.minsize(960, 680)
 
         # Set title bar & taskbar window icon
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.ico")
+        icon_path = get_resource_path("app_icon.ico")
         if os.path.exists(icon_path):
             try:
                 self.iconbitmap(icon_path)
@@ -209,7 +224,7 @@ class MusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
         icon_box.pack(side="left", padx=(0, 12))
         icon_box.pack_propagate(False)
 
-        png_icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon.png")
+        png_icon_path = get_resource_path("app_icon.png")
         if os.path.exists(png_icon_path):
             try:
                 from PIL import Image
