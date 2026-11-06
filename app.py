@@ -210,7 +210,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             fieldbackground=table_bg,
             borderwidth=0,
             font=(FONT_FAMILY, 10),
-            rowheight=32
+            rowheight=34
         )
         self.tree_style.configure(
             "Queue.Treeview.Heading",
@@ -218,7 +218,8 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             foreground=header_fg,
             relief="flat",
             borderwidth=0,
-            font=(FONT_FAMILY, 10, "bold")
+            font=(FONT_FAMILY, 10, "bold"),
+            padding=(6, 8)
         )
         self.tree_style.map(
             "Queue.Treeview",
@@ -238,7 +239,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             fieldbackground=table_bg,
             borderwidth=0,
             font=(FONT_FAMILY, 10),
-            rowheight=32
+            rowheight=34
         )
         self.tree_style.configure(
             "Result.Treeview.Heading",
@@ -246,7 +247,8 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             foreground=header_fg,
             relief="flat",
             borderwidth=0,
-            font=(FONT_FAMILY, 10, "bold")
+            font=(FONT_FAMILY, 10, "bold"),
+            padding=(6, 8)
         )
         self.tree_style.map(
             "Result.Treeview",
@@ -321,8 +323,8 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             top_right_box,
             text=theme_txt,
             width=76,
-            height=30,
-            corner_radius=15,
+            height=32,
+            corner_radius=16,
             font=ctk.CTkFont(family=FONT_FAMILY, size=11, weight="bold"),
             fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
             text_color="#334155" if self.current_mode == "light" else "#f1f5f9",
@@ -335,8 +337,8 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             top_right_box,
             text="● 正在检测 FFmpeg...",
             font=ctk.CTkFont(family=FONT_FAMILY, size=11, weight="bold"),
-            height=30,
-            corner_radius=15,
+            height=32,
+            corner_radius=16,
             fg_color="#ecfdf5",
             text_color="#065f46",
             border_width=1,
@@ -355,7 +357,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             border_width=1,
             fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
             border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
-            height=46
+            height=50
         )
         self.step_nav_bar.pack(side="top", fill="x", padx=24, pady=(0, 14))
         self.step_nav_bar.pack_propagate(False)
@@ -369,7 +371,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             text="① 选歌清单 (0 首)",
             font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
             width=210,
-            height=34,
+            height=36,
             corner_radius=8,
             fg_color="#2563eb",
             text_color="#ffffff",
@@ -393,7 +395,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             text="② 格式与参数配置",
             font=ctk.CTkFont(family=FONT_FAMILY, size=13),
             width=210,
-            height=34,
+            height=36,
             corner_radius=8,
             fg_color="transparent",
             text_color="#64748b" if self.current_mode == "light" else "#94a3b8",
@@ -417,7 +419,7 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             text="③ 转换进度与结果",
             font=ctk.CTkFont(family=FONT_FAMILY, size=13),
             width=210,
-            height=34,
+            height=36,
             corner_radius=8,
             fg_color="transparent",
             text_color="#64748b" if self.current_mode == "light" else "#94a3b8",
@@ -617,7 +619,71 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
         )
         self.lbl_queue_count.pack(side="right", padx=16, pady=8)
 
-        # 2. Main High-Resolution Treeview Queue Table (Full Space!)
+        # 2. Bottom Action Bar for Step 1 (Pack BOTTOM first to guarantee zero height squishing!)
+        self.step1_bottom = ctk.CTkFrame(
+            self.step1_frame,
+            corner_radius=12,
+            border_width=1,
+            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
+            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
+            height=62
+        )
+        self.step1_bottom.pack(side="bottom", fill="x")
+        self.step1_bottom.pack_propagate(False)
+
+        # Left Info & Auto Filter Checkbox
+        left_box = ctk.CTkFrame(self.step1_bottom, fg_color="transparent")
+        left_box.pack(side="left", padx=16, fill="y")
+
+        self.auto_filter_var = tk.BooleanVar(value=self.cfg.get("auto_filter_existing", False))
+        chk_auto_filter = ctk.CTkCheckBox(
+            left_box,
+            text="导入时自动排除已转换歌曲",
+            variable=self.auto_filter_var,
+            font=ctk.CTkFont(family=FONT_FAMILY, size=12),
+            text_color="#475569" if self.current_mode == "light" else "#cbd5e1",
+            checkbox_width=18,
+            checkbox_height=18,
+            corner_radius=4,
+            command=self._on_toggle_auto_filter
+        )
+        chk_auto_filter.pack(side="left", pady=19)
+
+        # Right Action Buttons: "Next: Settings" & "Direct Start"
+        right_box = ctk.CTkFrame(self.step1_bottom, fg_color="transparent")
+        right_box.pack(side="right", padx=16, fill="y")
+
+        btn_go_step2 = ctk.CTkButton(
+            right_box,
+            text="下一步：格式与参数配置 ➔",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
+            width=190,
+            height=38,
+            corner_radius=8,
+            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
+            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
+            border_width=1,
+            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
+            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
+            command=lambda: self.switch_to_step(2)
+        )
+        btn_go_step2.pack(side="left", padx=(0, 8), pady=12)
+
+        self.btn_step1_start = ctk.CTkButton(
+            right_box,
+            text="🚀 直接开始转换 (Alt+S)",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
+            width=180,
+            height=38,
+            corner_radius=8,
+            fg_color="#2563eb",
+            hover_color="#1d4ed8",
+            text_color="#ffffff",
+            command=self._on_start_stop_clicked
+        )
+        self.btn_step1_start.pack(side="left", pady=12)
+
+        # 3. Main High-Resolution Treeview Queue Table (Full Remaining Space!)
         self.queue_frame = ctk.CTkFrame(
             self.step1_frame,
             corner_radius=12,
@@ -673,70 +739,6 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
         # Context Menu & Double Click
         self._setup_step1_tree_events()
 
-        # 3. Bottom Action Bar for Step 1
-        self.step1_bottom = ctk.CTkFrame(
-            self.step1_frame,
-            corner_radius=12,
-            border_width=1,
-            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
-            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
-            height=54
-        )
-        self.step1_bottom.pack(side="bottom", fill="x")
-        self.step1_bottom.pack_propagate(False)
-
-        # Left Info & Auto Filter Checkbox
-        left_box = ctk.CTkFrame(self.step1_bottom, fg_color="transparent")
-        left_box.pack(side="left", padx=16, fill="y")
-
-        self.auto_filter_var = tk.BooleanVar(value=self.cfg.get("auto_filter_existing", False))
-        chk_auto_filter = ctk.CTkCheckBox(
-            left_box,
-            text="导入时自动排除已转换歌曲",
-            variable=self.auto_filter_var,
-            font=ctk.CTkFont(family=FONT_FAMILY, size=12),
-            text_color="#475569" if self.current_mode == "light" else "#cbd5e1",
-            checkbox_width=18,
-            checkbox_height=18,
-            corner_radius=4,
-            command=self._on_toggle_auto_filter
-        )
-        chk_auto_filter.pack(side="left", pady=16)
-
-        # Right Action Buttons: "Next: Settings" & "Direct Start"
-        right_box = ctk.CTkFrame(self.step1_bottom, fg_color="transparent")
-        right_box.pack(side="right", padx=16, fill="y")
-
-        btn_go_step2 = ctk.CTkButton(
-            right_box,
-            text="下一步：格式与参数配置 ➔",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
-            width=190,
-            height=38,
-            corner_radius=8,
-            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
-            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
-            border_width=1,
-            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
-            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
-            command=lambda: self.switch_to_step(2)
-        )
-        btn_go_step2.pack(side="left", padx=(0, 8), pady=8)
-
-        self.btn_step1_start = ctk.CTkButton(
-            right_box,
-            text="🚀 直接开始转换 (Alt+S)",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
-            width=180,
-            height=38,
-            corner_radius=8,
-            fg_color="#2563eb",
-            hover_color="#1d4ed8",
-            text_color="#ffffff",
-            command=self._on_start_stop_clicked
-        )
-        self.btn_step1_start.pack(side="left", pady=8)
-
     # =========================================================================
     # STEP 2 VIEW: 格式与设置 (FORMAT & AUDIO ENGINEERING)
     # =========================================================================
@@ -744,7 +746,49 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
     def _build_step2_view(self):
         self.step2_frame = ctk.CTkFrame(self.container, fg_color="transparent")
 
-        # Main Scrollable Settings Container
+        # 1. Bottom Bar for Step 2 (Pack BOTTOM first to guarantee zero height squishing!)
+        self.step2_bottom = ctk.CTkFrame(
+            self.step2_frame,
+            corner_radius=12,
+            border_width=1,
+            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
+            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
+            height=62
+        )
+        self.step2_bottom.pack(side="bottom", fill="x")
+        self.step2_bottom.pack_propagate(False)
+
+        btn_back_step1 = ctk.CTkButton(
+            self.step2_bottom,
+            text="⬅ 上一步：返回歌曲列表",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
+            width=180,
+            height=38,
+            corner_radius=8,
+            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
+            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
+            border_width=1,
+            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
+            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
+            command=lambda: self.switch_to_step(1)
+        )
+        btn_back_step1.pack(side="left", padx=16, pady=12)
+
+        self.btn_step2_start = ctk.CTkButton(
+            self.step2_bottom,
+            text="🚀 开始执行转换 (Alt+S)",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
+            width=200,
+            height=38,
+            corner_radius=8,
+            fg_color="#2563eb",
+            hover_color="#1d4ed8",
+            text_color="#ffffff",
+            command=self._on_start_stop_clicked
+        )
+        self.btn_step2_start.pack(side="right", padx=16, pady=12)
+
+        # 2. Main Scrollable Settings Container (Expands in remaining space!)
         settings_box = ctk.CTkScrollableFrame(
             self.step2_frame,
             corner_radius=12,
@@ -840,6 +884,11 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             justify="left"
         )
         self.lbl_encoding_hint.pack(fill="both", expand=True, padx=12, pady=10)
+
+        def _on_callout_resize(event):
+            if event.width > 60:
+                self.lbl_encoding_hint.configure(wraplength=event.width - 28)
+        self.callout_frame.bind("<Configure>", _on_callout_resize)
 
         # CARD 2: 📂 输出保存路径与增量规则
         card2 = ctk.CTkFrame(
@@ -1000,48 +1049,6 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
         )
         btn_custom_ffmpeg.pack(side="right")
 
-        # Bottom Bar for Step 2
-        self.step2_bottom = ctk.CTkFrame(
-            self.step2_frame,
-            corner_radius=12,
-            border_width=1,
-            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
-            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
-            height=54
-        )
-        self.step2_bottom.pack(side="bottom", fill="x")
-        self.step2_bottom.pack_propagate(False)
-
-        btn_back_step1 = ctk.CTkButton(
-            self.step2_bottom,
-            text="⬅ 上一步：返回歌曲列表",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
-            width=180,
-            height=38,
-            corner_radius=8,
-            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
-            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
-            border_width=1,
-            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
-            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
-            command=lambda: self.switch_to_step(1)
-        )
-        btn_back_step1.pack(side="left", padx=16, pady=8)
-
-        self.btn_step2_start = ctk.CTkButton(
-            self.step2_bottom,
-            text="🚀 开始执行转换 (Alt+S)",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
-            width=200,
-            height=38,
-            corner_radius=8,
-            fg_color="#2563eb",
-            hover_color="#1d4ed8",
-            text_color="#ffffff",
-            command=self._on_start_stop_clicked
-        )
-        self.btn_step2_start.pack(side="right", padx=16, pady=8)
-
     # =========================================================================
     # STEP 3 VIEW: 转换进度与结果 (PROGRESS & REAL-TIME RESULTS)
     # =========================================================================
@@ -1091,17 +1098,17 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
 
         # 4 Metric KPI Badges in a row
         kpi_row = ctk.CTkFrame(self.dashboard_card, fg_color="transparent")
-        kpi_row.pack(fill="x", padx=16, pady=(0, 10))
+        kpi_row.pack(fill="x", padx=16, pady=(0, 12))
 
         # Helper to create metric box
         def make_kpi(parent, title, init_val, fg, border, tc):
-            box = ctk.CTkFrame(parent, corner_radius=8, border_width=1, fg_color=fg, border_color=border, height=52)
+            box = ctk.CTkFrame(parent, corner_radius=10, border_width=1, fg_color=fg, border_color=border, height=76)
             box.pack(side="left", fill="x", expand=True, padx=4)
             box.pack_propagate(False)
             l_t = ctk.CTkLabel(box, text=title, font=ctk.CTkFont(family=FONT_FAMILY, size=11), text_color="#64748b")
-            l_t.pack(pady=(4, 0))
-            l_v = ctk.CTkLabel(box, text=init_val, font=ctk.CTkFont(family=FONT_FAMILY, size=15, weight="bold"), text_color=tc)
-            l_v.pack()
+            l_t.pack(pady=(8, 2))
+            l_v = ctk.CTkLabel(box, text=init_val, font=ctk.CTkFont(family=FONT_FAMILY, size=16, weight="bold"), text_color=tc)
+            l_v.pack(pady=(0, 8))
             return l_v
 
         is_light = self.current_mode == "light"
@@ -1116,11 +1123,75 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
             text="就绪: 等待启动转换任务",
             font=ctk.CTkFont(family=FONT_FAMILY, size=12),
             text_color="#475569" if is_light else "#94a3b8",
-            anchor="w"
+            anchor="w",
+            justify="left"
         )
-        self.lbl_current_track.pack(fill="x", padx=16, pady=(0, 12))
+        self.lbl_current_track.pack(fill="x", padx=16, pady=(0, 14))
 
-        # 2. Converted Songs Real-time Stream Table
+        def _on_dashboard_resize(event):
+            if event.width > 60:
+                self.lbl_current_track.configure(wraplength=event.width - 32)
+        self.dashboard_card.bind("<Configure>", _on_dashboard_resize)
+
+        # 2. Bottom Action Bar for Step 3 (Pack BOTTOM first to guarantee zero height squishing!)
+        self.step3_bottom = ctk.CTkFrame(
+            self.step3_frame,
+            corner_radius=12,
+            border_width=1,
+            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
+            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
+            height=62
+        )
+        self.step3_bottom.pack(side="bottom", fill="x")
+        self.step3_bottom.pack_propagate(False)
+
+        btn_back_to_list = ctk.CTkButton(
+            self.step3_bottom,
+            text="⬅ 返回选歌列表",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
+            width=160,
+            height=38,
+            corner_radius=8,
+            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
+            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
+            border_width=1,
+            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
+            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
+            command=lambda: self.switch_to_step(1)
+        )
+        btn_back_to_list.pack(side="left", padx=16, pady=12)
+
+        btn_open_out_3 = ctk.CTkButton(
+            self.step3_bottom,
+            text="📂 打开输出目录",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
+            width=140,
+            height=38,
+            corner_radius=8,
+            fg_color="#f8fafc" if self.current_mode == "light" else "#334155",
+            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
+            border_width=1,
+            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
+            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
+            command=self._on_open_output_dir
+        )
+        btn_open_out_3.pack(side="left", padx=4, pady=12)
+
+        self.btn_step3_action = ctk.CTkButton(
+            self.step3_bottom,
+            text="▶ 开始执行转换",
+            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
+            width=180,
+            height=38,
+            corner_radius=8,
+            fg_color="#2563eb",
+            hover_color="#1d4ed8",
+            text_color="#ffffff",
+            command=self._on_start_stop_clicked
+        )
+        self.btn_step3_action.pack(side="right", padx=16, pady=12)
+
+        # 3. Converted Songs Real-time Stream Table (Expands in remaining space!)
         self.results_frame = ctk.CTkFrame(
             self.step3_frame,
             corner_radius=12,
@@ -1175,64 +1246,6 @@ class CloudMusicConverterApp(ctk.CTk, tkinterdnd2.TkinterDnD.DnDWrapper):
 
         # Bindings for Step 3 results table
         self._setup_step3_tree_events()
-
-        # 3. Bottom Action Bar for Step 3
-        self.step3_bottom = ctk.CTkFrame(
-            self.step3_frame,
-            corner_radius=12,
-            border_width=1,
-            fg_color="#ffffff" if self.current_mode == "light" else "#1e293b",
-            border_color="#e2e8f0" if self.current_mode == "light" else "#334155",
-            height=54
-        )
-        self.step3_bottom.pack(side="bottom", fill="x")
-        self.step3_bottom.pack_propagate(False)
-
-        btn_back_to_list = ctk.CTkButton(
-            self.step3_bottom,
-            text="⬅ 返回选歌列表",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
-            width=160,
-            height=38,
-            corner_radius=8,
-            fg_color="#f1f5f9" if self.current_mode == "light" else "#334155",
-            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
-            border_width=1,
-            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
-            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
-            command=lambda: self.switch_to_step(1)
-        )
-        btn_back_to_list.pack(side="left", padx=16, pady=8)
-
-        btn_open_out_3 = ctk.CTkButton(
-            self.step3_bottom,
-            text="📂 打开输出目录",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13),
-            width=140,
-            height=38,
-            corner_radius=8,
-            fg_color="#f8fafc" if self.current_mode == "light" else "#334155",
-            text_color="#1e293b" if self.current_mode == "light" else "#f8fafc",
-            border_width=1,
-            border_color="#cbd5e1" if self.current_mode == "light" else "#475569",
-            hover_color="#e2e8f0" if self.current_mode == "light" else "#475569",
-            command=self._on_open_output_dir
-        )
-        btn_open_out_3.pack(side="left", padx=4, pady=8)
-
-        self.btn_step3_action = ctk.CTkButton(
-            self.step3_bottom,
-            text="▶ 开始执行转换",
-            font=ctk.CTkFont(family=FONT_FAMILY, size=13, weight="bold"),
-            width=180,
-            height=38,
-            corner_radius=8,
-            fg_color="#2563eb",
-            hover_color="#1d4ed8",
-            text_color="#ffffff",
-            command=self._on_start_stop_clicked
-        )
-        self.btn_step3_action.pack(side="right", padx=16, pady=8)
 
         # Global hotkey
         self.bind("<Alt-s>", lambda e: self._on_start_stop_clicked())
