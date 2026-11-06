@@ -1,0 +1,13 @@
+{
+    "target_format": "source",
+    "mp3_bitrate": "320k",
+    "aac_bitrate": "256k",
+    "output_dir": "D:\\CloudMusic\\VipSongsDownload\\decrypted",
+    "skip_existing": true,
+    "auto_filter_existing": false,
+    "max_workers": 3,
+    "custom_ffmpeg_path": "",
+    "appearance_mode": "light",
+    "color_theme": "blue",
+    "auto_open_folder": true
+}
