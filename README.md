@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python Version">
   <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform">
   <img src="https://img.shields.io/badge/Encoder-FFmpeg%20%7C%20libmp3lame-007808?style=flat-square" alt="Encoder">
+  <a href="https://github.com/studioj2y/163MusicConverter"><img src="https://img.shields.io/badge/GitHub-studioj2y%2F163MusicConverter-181717?style=flat-square&logo=github" alt="GitHub"></a>
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
 
@@ -98,10 +99,12 @@ CloudMusicConverter/
 
 ## 🚀 快速开始
 
-### 1. 安装依赖环境
+### 1. 获取代码与安装依赖
 
 确保您的系统已安装 **Python 3.8+** 以及 **FFmpeg**：
 ```bash
+git clone https://github.com/studioj2y/163MusicConverter.git
+cd 163MusicConverter
 pip install -r requirements.txt
 ```
 
